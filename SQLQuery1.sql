@@ -1,0 +1,15 @@
+﻿USE KuyrukDB;
+GO
+
+CREATE TABLE dbo.KuyrukKaydi(
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    PointId NVARCHAR(20) NOT NULL,
+    [Timestamp] DATETIME2 NOT NULL,
+    DurationMin INT NOT NULL
+);
+
+INSERT INTO dbo.KuyrukKaydi(PointId, [Timestamp], DurationMin) VALUES
+('BN01','2024-09-01T13:10:00',335),
+('BN01','2024-09-01T13:15:00',185),
+('BN02','2024-09-01T13:10:00',120),
+('BN03','2024-09-01T13:20:00', 90);

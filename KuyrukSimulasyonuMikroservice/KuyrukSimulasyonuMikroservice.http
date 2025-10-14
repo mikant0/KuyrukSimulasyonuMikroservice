@@ -1,0 +1,6 @@
+@KuyrukSimulasyonuMikroservice_HostAddress = http://localhost:5010
+
+GET {{KuyrukSimulasyonuMikroservice_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
