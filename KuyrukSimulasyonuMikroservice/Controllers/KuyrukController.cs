@@ -59,16 +59,17 @@ namespace KuyrukSimulasyonuMikroservice.Controllers
                 await using var con = new SqlConnection(cs);
                 await con.OpenAsync();
 
-                var cmd = new SqlCommand($"SELECT PointId, [Timestamp], DurationMin FROM {table} ORDER BY [Timestamp];", con);
+                var cmd = new SqlCommand($"SELECT Id,PointId, [Timestamp], DurationMin FROM {table} ORDER BY [Timestamp];", con);
                 await using var rdr = await cmd.ExecuteReaderAsync();
 
                 while (await rdr.ReadAsync())
                 {
                     result.Add(new QueueRecord
                     {
-                        PointId = rdr.GetString(0),
-                        Timestamp = rdr.GetDateTime(1),
-                        DurationMin = rdr.GetInt32(2)
+                        Id = rdr.GetInt32(0),
+                        PointId = rdr.GetString(1),
+                        Timestamp = rdr.GetDateTime(2),
+                        DurationMin = rdr.GetInt32(3)
                     });
                 }
 
@@ -137,7 +138,7 @@ namespace KuyrukSimulasyonuMikroservice.Controllers
                 ? $"Server={req.Server};Database={req.Database};Integrated Security=True;TrustServerCertificate=True;Connect Timeout=5;"
                 : $"Server={req.Server};Database={req.Database};User Id={req.UserId};Password={req.Password};TrustServerCertificate=True;Connect Timeout=5;";
 
-            // tablo adı -> [dbo].[KuyrukKaydi] formatına getirelim
+            // tablo adı -> [dbo].[KuyrukKaydi] formatına gelsin
             string ToIdent(string input)
             {
                 if (string.IsNullOrWhiteSpace(input)) return "[dbo].[KuyrukKaydi]";
@@ -177,6 +178,76 @@ namespace KuyrukSimulasyonuMikroservice.Controllers
                 return StatusCode(500, new { ok = false, error = ex.GetType().Name, message = ex.Message });
             }
         }
+        [HttpPost("add")]
+        public async Task<IActionResult> AddRecord([FromBody] AddRecordRequest req)
+        {
+            if (req == null || req.Record == null)
+                return BadRequest(new { error = "Geçersiz istek: veri boş." });
+
+            if (string.IsNullOrWhiteSpace(req.Server) || string.IsNullOrWhiteSpace(req.Database))
+                return BadRequest(new { error = "Server ve Database zorunludur." });
+
+            var cs = string.IsNullOrWhiteSpace(req.UserId)
+                ? $"Server={req.Server};Database={req.Database};Integrated Security=True;TrustServerCertificate=True;Connect Timeout=5;"
+                : $"Server={req.Server};Database={req.Database};User Id={req.UserId};Password={req.Password};TrustServerCertificate=True;Connect Timeout=5;";
+
+            try
+            {
+                await using var con = new SqlConnection(cs);
+                await con.OpenAsync();
+
+                var cmd = new SqlCommand(@"
+            INSERT INTO [dbo].[KuyrukKaydi] (PointId, [Timestamp], DurationMin)
+            VALUES (@pid, @ts, @dur);", con);
+
+                cmd.Parameters.AddWithValue("@pid", req.Record.PointId);
+                cmd.Parameters.AddWithValue("@ts", req.Record.Timestamp);
+                cmd.Parameters.AddWithValue("@dur", req.Record.DurationMin);
+
+                var affected = await cmd.ExecuteNonQueryAsync();
+
+                return Ok(new { ok = affected > 0, message = "Kayıt başarıyla eklendi." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message });
+            }
+        }
+        [HttpPost("delete")]
+        public async Task<IActionResult> DeleteRecord([FromBody] DeleteRecordRequest req)
+        {
+            if (req == null)
+                return BadRequest(new { error = "Geçersiz istek: veri boş." });
+
+            if (string.IsNullOrWhiteSpace(req.Server) || string.IsNullOrWhiteSpace(req.Database))
+                return BadRequest(new { error = "Server ve Database zorunludur." });
+
+            var cs = string.IsNullOrWhiteSpace(req.UserId)
+                ? $"Server={req.Server};Database={req.Database};Integrated Security=True;TrustServerCertificate=True;Connect Timeout=5;"
+                : $"Server={req.Server};Database={req.Database};User Id={req.UserId};Password={req.Password};TrustServerCertificate=True;Connect Timeout=5;";
+
+            try
+            {
+                await using var con = new SqlConnection(cs);
+                await con.OpenAsync();
+
+                var cmd = new SqlCommand("DELETE FROM [dbo].[KuyrukKaydi] WHERE Id=@id;", con);
+                cmd.Parameters.AddWithValue("@id", req.Id);
+
+                var affected = await cmd.ExecuteNonQueryAsync();
+
+                if (affected == 0)
+                    return NotFound(new { ok = false, message = "Kayıt bulunamadı." });
+
+                return Ok(new { ok = true, message = "Kayıt başarıyla silindi." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message });
+            }
+        }
+
+
 
 
 
