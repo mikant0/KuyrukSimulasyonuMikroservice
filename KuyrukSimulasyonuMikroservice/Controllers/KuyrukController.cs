@@ -246,6 +246,35 @@ namespace KuyrukSimulasyonuMikroservice.Controllers
                 return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message });
             }
         }
+        [HttpPost("points")]
+        public async Task<IActionResult> GetPoints([FromBody] DbConnectRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.Server) || string.IsNullOrWhiteSpace(req.Database))
+                return BadRequest(new { error = "Server ve Database zorunludur." });
+
+            var cs = string.IsNullOrWhiteSpace(req.UserId)
+                ? $"Server={req.Server};Database={req.Database};Integrated Security=True;TrustServerCertificate=True;Connect Timeout=5;"
+                : $"Server={req.Server};Database={req.Database};User Id={req.UserId};Password={req.Password};TrustServerCertificate=True;Connect Timeout=5;";
+
+            try
+            {
+                var list = new List<string>();
+                await using var con = new SqlConnection(cs);
+                await con.OpenAsync();
+
+                var cmd = new SqlCommand("SELECT PointName FROM dbo.Points ORDER BY PointName;", con);
+                await using var rdr = await cmd.ExecuteReaderAsync();
+
+                while (await rdr.ReadAsync())
+                    list.Add(rdr.GetString(0));
+
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message });
+            }
+        }
 
 
 

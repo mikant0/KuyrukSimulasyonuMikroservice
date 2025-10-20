@@ -5,283 +5,380 @@
     <title>Kuyruk Kayıtları</title>
     <style>
         body {
-            font-family: system-ui, Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(to right, #e6f9f9, #ffffff);
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #006d77;
+            margin-top: 30px;
+            background: linear-gradient(90deg, #00b4d8, #0096c7);
+            color: white;
+            padding: 20px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
             max-width: 1000px;
-            margin: 24px auto;
-            padding: 0 12px;
+            margin: 30px auto;
+            padding: 20px 40px;
+            background: #ffffffc9;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .row {
             display: grid;
-            grid-template-columns: repeat(2, minmax(240px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            align-items: center;
         }
 
         label {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            font-weight: 600;
+            color: #007b83;
         }
 
-        input {
-            padding: 8px;
-            border: 1px solid #d0d7de;
+        input, select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #a7c7c9;
             border-radius: 8px;
+            font-size: 14px;
+            transition: 0.2s;
         }
+
+            input:focus, select:focus {
+                border-color: #00b4d8;
+                box-shadow: 0 0 5px #00b4d86c;
+                outline: none;
+            }
 
         button {
-            padding: 10px 14px;
-            border: 0;
-            border-radius: 10px;
-            background: #0969da;
-            color: #fff;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
             cursor: pointer;
+            color: white;
+            background: linear-gradient(90deg, #00b4d8, #0096c7);
+            transition: all 0.3s ease;
         }
 
+            button:hover {
+                transform: scale(1.05);
+                background: linear-gradient(90deg, #00b4d8, #0077b6);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+
             button.secondary {
-                background: #6e7781;
+                background: linear-gradient(90deg, #adb5bd, #6c757d);
             }
 
             button.danger {
-                background: #d12c2c;
-            }
-
-            button[disabled] {
-                opacity: .6;
-                cursor: not-allowed;
+                background: linear-gradient(90deg, #e63946, #d00000);
             }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 18px;
-        }
-
-        th, td {
-            border: 1px solid #e5e7eb;
-            padding: 8px;
-            text-align: left;
+            margin-top: 25px;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         th {
-            background: #f8fafc;
+            background: #00b4d8;
+            color: white;
+            text-align: left;
+            padding: 10px;
+        }
+
+        td {
+            border-bottom: 1px solid #e9ecef;
+            padding: 10px;
+        }
+
+        tr:nth-child(even) {
+            background: #f1f9fa;
         }
 
         tr:hover {
-            background-color: #f1f5f9;
+            background: #caf0f8;
             cursor: pointer;
-        }
-
-        .hint {
-            font-size: 12px;
-            color: #6e7781;
         }
 
         .status {
             margin-top: 12px;
+            font-weight: 500;
         }
 
         .ok {
-            color: #1a7f37;
+            color: #007b83;
         }
 
         .err {
-            color: #cf222e;
-        }
-
-        h2 {
-            margin-top: 24px;
+            color: #e63946;
         }
     </style>
+
 </head>
 <body>
     <h1>Kuyruk Kayıtları</h1>
+    <div class = "container" >
 
-    <!-- bağlantı bilgileri -->
-    <div class="row">
-        <label>Server <input id="server" value="(localdb)\MSSQLLocalDB"></label>
-        <label>Database <input id="database" value="KuyrukDB"></label>
-        <label>User Id <input id="userId" value=""></label>
-        <label>Password <input id="password" type="password" value=""></label>
-        <label>Table <input id="table" value="KuyrukKaydi"></label>
+        <!-- bağlantı bilgileri -->
+        <div class="row">
+            <label>Server <input id="server" value="(localdb)\MSSQLLocalDB"></label>
+            <label>Database <input id="database" value="KuyrukDB"></label>
+            <label>User Id <input id="userId" value=""></label>
+            <label>Password <input id="password" type="password" value=""></label>
+            <label>Table <input id="table" value="KuyrukKaydi"></label>
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:10px;">
+            <button id="btnLoad">Verileri Getir (DB)</button>
+            <button class="secondary" id="btnSample">Örnek Veriyi Getir (API)</button>
+            <button class="secondary" id="btnPing">Ping</button>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <!-- tablo -->
+        <table id="grid" style="display:none">
+            <thead><tr><th>Id</th><th>PointId</th><th>Timestamp</th><th>Duration (min)</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <!-- kayıt formu -->
+        <h2>Yeni / Seçilen Kayıt</h2>
+        <div class="row">
+            <label>
+                Id (otomatik)
+                <input id="f_id" disabled>
+            </label>
+            <label>
+                Point Id
+                <select id="pointSelect"></select>
+                <input id="f_pointid" type="hidden">
+
+            </label>
+
+            <label>
+                Timestamp
+                <input id="f_timestamp" type="datetime-local">
+            </label>
+            <label>
+                Duration (dakika)
+                <input id="f_duration" type="number">
+            </label>
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:10px;">
+            <button id="btnAdd">Yeni Kayıt Ekle</button>
+            <button class="danger" id="btnDelete">Seçili Kaydı Sil</button>
+        </div>
     </div>
 
-    <div style="margin-top:14px;display:flex;gap:10px;">
-        <button id="btnLoad">Verileri Getir (DB)</button>
-        <button class="secondary" id="btnSample">Örnek Veriyi Getir (API)</button>
-        <button class="secondary" id="btnPing">Ping</button>
-    </div>
+        <script>
+            const statusEl = document.getElementById('status');
+            const grid = document.getElementById('grid');
+            const tbody = grid.querySelector('tbody');
+            const btnLoad = document.getElementById('btnLoad');
+            const btnSample = document.getElementById('btnSample');
+            const btnPing = document.getElementById('btnPing');
+            const btnAdd = document.getElementById('btnAdd');
+            const btnDelete = document.getElementById('btnDelete');
 
-    <div class="status" id="status"></div>
+            let selectedId = null;
 
-    <!-- tablo -->
-    <table id="grid" style="display:none">
-        <thead><tr><th>Id</th><th>PointId</th><th>Timestamp</th><th>Duration (min)</th></tr></thead>
-        <tbody></tbody>
-    </table>
+            function setStatus(msg, ok = true) {
+                statusEl.innerHTML = `<span class="${ok ? 'ok' : 'err'}">${msg}</span>`;
+            }
 
-    <!-- kayıt formu -->
-    <h2>Yeni / Seçilen Kayıt</h2>
-    <div class="row">
-        <label>
-            Id (otomatik)
-            <input id="f_id" disabled>
-        </label>
-        <label>
-            Point Id
-            <input id="f_pointid">
-        </label>
-        <label>
-            Timestamp
-            <input id="f_timestamp" type="datetime-local">
-        </label>
-        <label>
-            Duration (dakika)
-            <input id="f_duration" type="number">
-        </label>
-    </div>
+            function readForm() {
+                const v = id => document.getElementById(id).value.trim();
+                let table = v('table');
+                if (!table) table = 'dbo.KuyrukKaydi';
+                else if (!table.includes('.')) table = `dbo.${table}`;
+                return {
+                    server: v('server'),
+                    database: v('database'),
+                    userId: v('userId'),
+                    password: v('password'),
+                    table
+                };
+            }
 
-    <div style="margin-top:14px;display:flex;gap:10px;">
-        <button id="btnAdd">Yeni Kayıt Ekle</button>
-        <button class="danger" id="btnDelete">Seçili Kaydı Sil</button>
-    </div>
+            async function safeJson(res) {
+                const raw = await res.text();
+                if (!res.ok) throw new Error(raw || `HTTP ${res.status}`);
+                if (!raw) return [];
+                try { return JSON.parse(raw); }
+                catch { throw new Error('Gelen cevap JSON değil: ' + raw.slice(0, 200)); }
+            }
 
-    <script>
-        const statusEl = document.getElementById('status');
-        const grid = document.getElementById('grid');
-        const tbody = grid.querySelector('tbody');
-        const btnLoad = document.getElementById('btnLoad');
-        const btnSample = document.getElementById('btnSample');
-        const btnPing = document.getElementById('btnPing');
-        const btnAdd = document.getElementById('btnAdd');
-        const btnDelete = document.getElementById('btnDelete');
+            async function withBusy(btn, fn) {
+                try { btn.disabled = true; await fn(); }
+                finally { btn.disabled = false; }
+            }
 
-        let selectedId = null;
+            function render(rows) {
+                tbody.innerHTML = '';
+                if (!Array.isArray(rows)) { setStatus('Beklenmeyen cevap', false); return; }
+                rows.forEach(r => {
+                    const tr = document.createElement('tr');
+                    const id = r.id ?? r.Id ?? '';
+                    const pid = r.pointId ?? r.PointId ?? '';
+                    const rawTs = r.timestamp ?? r.Timestamp;
+                    const ts = rawTs ? new Date(rawTs).toLocaleString() : '';
+                    const dur = r.durationMin ?? r.DurationMin ?? '';
+                    tr.innerHTML = `<td>${id}</td><td>${pid}</td><td>${ts}</td><td>${dur}</td>`;
+                    tr.onclick = () => selectRow(id, pid, rawTs, dur);
+                    tbody.appendChild(tr);
+                });
+                grid.style.display = rows.length ? 'table' : 'none';
+                setStatus(`Toplam ${rows.length} kayıt yüklendi.`, true);
+            }
 
-        function setStatus(msg, ok = true) {
-            statusEl.innerHTML = `<span class="${ok ? 'ok' : 'err'}">${msg}</span>`;
-        }
+            function selectRow(id, pid, ts, dur) {
+                selectedId = id;
+                document.getElementById('f_id').value = id;
+                document.getElementById('f_pointid').value = pid;
+                document.getElementById('f_timestamp').value = ts ? ts.slice(0, 16) : '';
+                document.getElementById('f_duration').value = dur;
+                setStatus(`ID ${id} seçildi.`, true);
+            }
 
-        function readForm() {
-            const v = id => document.getElementById(id).value.trim();
-            let table = v('table');
-            if (!table) table = 'dbo.KuyrukKaydi';
-            else if (!table.includes('.')) table = `dbo.${table}`;
-            return {
-                server: v('server'),
-                database: v('database'),
-                userId: v('userId'),
-                password: v('password'),
-                table
-            };
-        }
-
-        async function safeJson(res) {
-            const raw = await res.text();
-            if (!res.ok) throw new Error(raw || `HTTP ${res.status}`);
-            if (!raw) return [];
-            try { return JSON.parse(raw); }
-            catch { throw new Error('Gelen cevap JSON değil: ' + raw.slice(0, 200)); }
-        }
-
-        async function withBusy(btn, fn) {
-            try { btn.disabled = true; await fn(); }
-            finally { btn.disabled = false; }
-        }
-
-        function render(rows) {
-            tbody.innerHTML = '';
-            if (!Array.isArray(rows)) { setStatus('Beklenmeyen cevap', false); return; }
-            rows.forEach(r => {
-                const tr = document.createElement('tr');
-                const id = r.id ?? r.Id ?? '';
-                const pid = r.pointId ?? r.PointId ?? '';
-                const rawTs = r.timestamp ?? r.Timestamp;
-                const ts = rawTs ? new Date(rawTs).toLocaleString() : '';
-                const dur = r.durationMin ?? r.DurationMin ?? '';
-                tr.innerHTML = `<td>${id}</td><td>${pid}</td><td>${ts}</td><td>${dur}</td>`;
-                tr.onclick = () => selectRow(id, pid, rawTs, dur);
-                tbody.appendChild(tr);
+            btnLoad.onclick = () => withBusy(btnLoad, async () => {
+                setStatus('Yükleniyor...');
+                const body = readForm();
+                try {
+                    const res = await fetch('/api/kuyruk/query', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    const data = await safeJson(res);
+                    console.log("Gelen veri:", data);
+                    render(data);
+                } catch (err) {
+                    console.error("Hata:", err);
+                    setStatus('Hata oluştu: ' + err.message, false);
+                }
             });
-            grid.style.display = rows.length ? 'table' : 'none';
-            setStatus(`Toplam ${rows.length} kayıt yüklendi.`, true);
-        }
 
-        function selectRow(id, pid, ts, dur) {
-            selectedId = id;
-            document.getElementById('f_id').value = id;
-            document.getElementById('f_pointid').value = pid;
-            document.getElementById('f_timestamp').value = ts ? ts.slice(0, 16) : '';
-            document.getElementById('f_duration').value = dur;
-            setStatus(`ID ${id} seçildi.`, true);
-        }
 
-        btnLoad.onclick = () => withBusy(btnLoad, async () => {
-            setStatus('Yükleniyor...');
-            const body = readForm();
-            try {
-                const res = await fetch('/api/kuyruk/query', {
+            btnSample.onclick = () => withBusy(btnSample, async () => {
+                setStatus('Örnek veri alınıyor...');
+                const res = await fetch('/api/kuyruk/sample');
+                const data = await safeJson(res);
+                render(data);
+            });
+
+            btnPing.onclick = () => withBusy(btnPing, async () => {
+                const res = await fetch('/api/kuyruk/ping');
+                const data = await safeJson(res);
+                setStatus(`Ping OK: ${data.time}`, true);
+            });
+
+            btnAdd.onclick = () => withBusy(btnAdd, async () => {
+                const conn = readForm();
+                const rec = {
+                    PointId: document.getElementById('f_pointid').value.trim(),
+                    Timestamp: document.getElementById('f_timestamp').value,
+                    DurationMin: parseInt(document.getElementById('f_duration').value)
+                };
+                if (!rec.PointId || !rec.Timestamp || !rec.DurationMin) {
+                    setStatus('Lütfen tüm alanları doldurun.', false);
+                    return;
+                }
+                const res = await fetch('/api/kuyruk/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify({ ...conn, record: rec })
                 });
                 const data = await safeJson(res);
-                console.log("Gelen veri:", data);
-                render(data);
-            } catch (err) {
-                console.error("Hata:", err);
-                setStatus('Hata oluştu: ' + err.message, false);
-            }
-        });
-
-
-        btnSample.onclick = () => withBusy(btnSample, async () => {
-            setStatus('Örnek veri alınıyor...');
-            const res = await fetch('/api/kuyruk/sample');
-            const data = await safeJson(res);
-            render(data);
-        });
-
-        btnPing.onclick = () => withBusy(btnPing, async () => {
-            const res = await fetch('/api/kuyruk/ping');
-            const data = await safeJson(res);
-            setStatus(`Ping OK: ${data.time}`, true);
-        });
-
-        btnAdd.onclick = () => withBusy(btnAdd, async () => {
-            const conn = readForm();
-            const rec = {
-                PointId: document.getElementById('f_pointid').value.trim(),
-                Timestamp: document.getElementById('f_timestamp').value,
-                DurationMin: parseInt(document.getElementById('f_duration').value)
-            };
-            if (!rec.PointId || !rec.Timestamp || !rec.DurationMin) {
-                setStatus('Lütfen tüm alanları doldurun.', false);
-                return;
-            }
-            const res = await fetch('/api/kuyruk/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...conn, record: rec })
+                setStatus(data.message || 'Kayıt eklendi.');
+                btnLoad.click();
             });
-            const data = await safeJson(res);
-            setStatus(data.message || 'Kayıt eklendi.');
-            btnLoad.click();
-        });
 
-        btnDelete.onclick = () => withBusy(btnDelete, async () => {
-            if (!selectedId) { setStatus('Önce silinecek bir kayıt seçin.', false); return; }
-            const conn = readForm();
-            const res = await fetch('/api/kuyruk/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...conn, id: selectedId })
+
+            btnDelete.onclick = () => withBusy(btnDelete, async () => {
+                if (!selectedId) { setStatus('Önce silinecek bir kayıt seçin.', false); return; }
+                const conn = readForm();
+                const res = await fetch('/api/kuyruk/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...conn, id: selectedId })
+                });
+                const data = await safeJson(res);
+                setStatus(data.message || 'Kayıt silindi.');
+                selectedId = null;
+                btnLoad.click();
             });
-            const data = await safeJson(res);
-            setStatus(data.message || 'Kayıt silindi.');
-            selectedId = null;
-            btnLoad.click();
-        });
-    </script>
+            // Sayfa yüklendiğinde Point listesini çek
+            window.addEventListener("DOMContentLoaded", loadPoints);
+
+            async function loadPoints() {
+                // Dropdown'da seçim yapılınca PointId alanını doldur
+                document.getElementById("pointSelect").addEventListener("change", function () {
+                    const selectedValue = this.value;
+                    document.getElementById("f_pointid").value = selectedValue;
+                });
+
+                try {
+                    const res = await fetch('/api/kuyruk/points', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            server: "(localdb)\\MSSQLLocalDB",
+                            database: "KuyrukDB",
+                            userId: "",
+                            password: "",
+                            table: "Points"
+                        })
+                    });
+
+                    if (!res.ok) {
+                        throw new Error("API isteği başarısız: " + res.status);
+                    }
+
+                    const data = await res.json();
+                    console.log("Point listesi geldi:", data);
+
+                    // Beklenen dizi değilse hata verdir
+                    if (!Array.isArray(data)) {
+                        console.error("Beklenen format array değil:", data);
+                        return;
+                    }
+
+                    // HTML'deki select elementine doldur
+                    const select = document.getElementById("pointSelect");
+                    select.innerHTML = ""; // öncekileri temizle
+                    data.forEach(name => {
+                        const opt = document.createElement("option");
+                        opt.value = name;
+                        opt.textContent = name;
+                        select.appendChild(opt);
+                    });
+
+                    console.log("Point listesi başarıyla eklendi ✅");
+
+                } catch (err) {
+                    console.error("Point listesi yüklenemedi:", err);
+                }
+            }
+
+
+        </script>
 </body>
 </html>
